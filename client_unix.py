@@ -13,12 +13,15 @@ server_address = "206.189.97.34"
 default_gateway = "192.168.0.1"
 # print(f"The command is: route add {server_address} {default_gateway} metric 9999")
 print(f"The command is: sudo route add {server_address} {default_gateway}")
+
+
 def get_me_in_local():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     t = s.getsockname()[0]
     s.close()
     return t
+
 
 me_in_local = get_me_in_local()
 print(f'Me in local: {me_in_local}')
@@ -27,12 +30,11 @@ vpn_port = 27005
 # vpn_port = 51820
 ovpn_listener.bind(("", vpn_port))
 
-
-
 client_ovpn_address = (None, None)
 
 padding = b"\x00\x11\x22"
 id_ = random.randint(0, (1 << 8) - 1)
+
 
 def checksum(source_string):
     sum = 0
@@ -63,7 +65,10 @@ def create_packet(id, data):
     header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, socket.htons(my_checksum), id, 6)
     return header + data
 
+
 icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, ICMP_CODE)
+
+
 def icmp_send(dest_addr, data):
     data = create_packet(id_, data)
     while data:
@@ -85,6 +90,7 @@ def icmpvpn2tun(sock):
             print(e)
             print(sock)
 
+
 import threading
 
 t = threading.Thread(target=icmpvpn2tun, args=(ovpn_listener,))
@@ -103,7 +109,15 @@ def incoming_icmp_listen():
         else:
             continue
         p = p[28:].removesuffix(b"\x00\x11\x22")
-        ovpn_listener.sendto(p,  client_ovpn_address)
+        print(f'got packet: {p}')
+        # ovpn_listener.sendto(p,  client_ovpn_address)
+
+
 p = threading.Thread(target=incoming_icmp_listen)
 p.start()
 
+while True:
+    # По непонятным причинам сервер может забывать, что ему не нужно отвечать на ICMP echo. Вроде sysctl -p это лечит
+    print('sending hello')
+    icmp_send(server_address, b"hello_from_client")
+    time.sleep(1)
