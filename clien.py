@@ -5,20 +5,10 @@ import time
 import platform
 import netifaces
 from common import *
-import ctypes, os
 
 ICMP_CODE = socket.getprotobyname('icmp')
 
 server_address = "206.189.97.34"
-
-try:
-    is_admin = os.geteuid() == 0
-except AttributeError:
-    is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-
-if not is_admin:
-    print("Run me with admin privileges")
-    exit(1)
 
 
 def get_me_in_local():

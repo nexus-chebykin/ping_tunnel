@@ -1,5 +1,16 @@
+import ctypes
+import os
 import socket
 import struct
+
+try:
+    is_admin = os.geteuid() == 0
+except AttributeError:
+    is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+if not is_admin:
+    print("Run me with admin privileges")
+    exit(1)
 
 ICMP_CODE = socket.getprotobyname('icmp')
 
