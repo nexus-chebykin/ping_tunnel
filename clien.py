@@ -2,6 +2,7 @@ import queue
 import random
 import subprocess
 import time
+import socket
 import platform
 import netifaces
 from common import *
@@ -98,7 +99,10 @@ def enableRouting():
     if isWindows:
         subprocess.check_output(f"route add {server_address} {default_gateway} metric 9999")
     else:
-        subprocess.check_output(f"sudo route add {server_address} {default_gateway}")
+        try:
+            subprocess.check_output(f"route add {server_address} gw {default_gateway}", shell=True)
+        except Exception as e:
+            print("Hopefully the above error is 'Already exists'")
 
 
 # Check ping is allowed
@@ -124,7 +128,9 @@ while True:
     except queue.Empty:
         print("Nope")
         os._exit(1)
+print("Success")
+input("Turn on the VPN, and then press any button...")
 enableRouting()
-print("You can turn on the VPN now")
+print("Running")
 mode = "redirect"
 ovpn_listener_thread.join()
