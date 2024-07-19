@@ -100,7 +100,7 @@ def enableRouting():
         subprocess.check_output(f"route add {server_address} {default_gateway} metric 9999")
     else:
         try:
-            subprocess.check_output(f"route add {server_address} gw {default_gateway}", shell=True)
+            subprocess.check_output(f"route add {server_address} {'gw' if platform.system() != 'Darwin' else ''} {default_gateway}", shell=True)
         except Exception as e:
             print("Hopefully the above error is 'Already exists'")
 
