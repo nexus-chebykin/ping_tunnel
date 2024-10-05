@@ -57,7 +57,9 @@ def icmp_receiver():
         import pcap
         # On windows - pip install pcap-ct
         # Компьютер\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkCards
-        sniffer = pcap.pcap(name=r'\Device\NPF_{5CA07E8D-B852-49DA-A335-F53FF0959121}', promisc=True, timeout_ms=50,
+        usbRealtek = '{5CA07E8D-B852-49DA-A335-F53FF0959121}'
+        wifi = '{A04EC865-F2A8-4A1A-A136-4C3FB04C7B0B}'
+        sniffer = pcap.pcap(name=fr'\Device\NPF_{wifi}', promisc=True, timeout_ms=50,
                             immediate=True)
         for _, p in sniffer:
             if p[23] == 1 and p[34] == 0:
@@ -129,8 +131,10 @@ while True:
         print("Nope")
         os._exit(1)
 print("Success")
-input("Turn on the VPN, and then press any button...")
+input("Turn on the VPN (it is expected not to connect), and then press any button...")
 enableRouting()
 print("Running")
 mode = "redirect"
 ovpn_listener_thread.join()
+
+# add route delete automatic
