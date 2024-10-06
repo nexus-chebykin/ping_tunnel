@@ -22,11 +22,13 @@ def get_me_in_local():
 
 me_in_local = get_me_in_local()
 print(f'Me in local: {me_in_local}')
-ovpn_listener = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+# ovpn_listener = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+ovpn_listener = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
 vpn_port = 27005
 ovpn_listener.bind(("", vpn_port))
-
 client_ovpn_address = (None, None)
+
+ovpn_listener.listen()
 
 padding = b"\x00\x11\x22"
 id_ = random.randint(0, 2 ** 16 - 1)
@@ -36,8 +38,9 @@ def vpnToServer(ovpn_listener):
     global client_ovpn_address
     while 1:
         try:
-            d, a = ovpn_listener.recvfrom(9999)
-            client_ovpn_address = a
+            # d, a = ovpn_listener.recvfrom(9999)
+            d= ovpn_listener.recv(9999)
+            # client_ovpn_address = a
             icmp_send(server_address, d, id_, False)
         except ConnectionResetError as e:
             print(e)
@@ -46,8 +49,6 @@ def vpnToServer(ovpn_listener):
 
 import threading
 
-ovpn_listener_thread = threading.Thread(target=vpnToServer, args=(ovpn_listener,))
-ovpn_listener_thread.start()
 
 isWindows = platform.system().lower() == "windows"
 
@@ -87,7 +88,8 @@ def incoming_icmp_listen():
         if mode == "enqueue":
             incoming_packets.put(packet)
         elif mode == "redirect":
-            ovpn_listener.sendto(packet, client_ovpn_address)
+            # ovpn_listener.sendto(packet, client_ovpn_address)
+            ovpn_listener.send(packet)
 
 
 incoming_icmp_listen_thread = threading.Thread(target=incoming_icmp_listen)
@@ -132,6 +134,9 @@ while True:
         os._exit(1)
 print("Success")
 input("Turn on the VPN (it is expected not to connect), and then press any button...")
+ovpn_listener, client_ovpn_address = ovpn_listener.accept()
+ovpn_listener_thread = threading.Thread(target=vpnToServer, args=(ovpn_listener,))
+ovpn_listener_thread.start()
 enableRouting()
 print("Running")
 mode = "redirect"
