@@ -1,9 +1,9 @@
+import time
+
 from common import *
 from typing import Dict
 import threading
 
-f = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-f.bind(("127.0.0.1", 0))
 class Connection:
     clientAddr = ""
     vpnPseudoclient = None
@@ -24,10 +24,11 @@ class Connection:
 
 
 clients: Dict[int, Connection] = dict()
-me_in_local = "206.189.97.34"
 icmp_receiver = socket.socket(socket.AF_INET, socket.SOCK_RAW, ICMP_CODE)
 
-vpnServerPort = 27005
+vpnServerPort = 51820
+data_m = b"abcdefghijklmnopqrstuvwabcdefghi"
+
 
 def incoming_icmp_listen():
     while True:
@@ -37,8 +38,12 @@ def incoming_icmp_listen():
         if id in clients:
             clients[id].vpnPseudoclient.sendto(data, ("localhost", vpnServerPort))
         elif data == b"HelloHello":
+        # elif data == data_m:
             clients[id] = Connection(addr[0], id)
-            icmp_send(addr[0], b"ReplyReply", id, True)
+            for i in range(100):
+                # icmp_send(addr[0], data_m, id, True)
+                icmp_send(addr[0], b"ReplyReply", id, True)
+                time.sleep(1)
 
 
 print('Server is ready')

@@ -7,9 +7,8 @@ import platform
 import netifaces
 from common import *
 
-ICMP_CODE = socket.getprotobyname('icmp')
 
-server_address = "206.189.97.34"
+server_address = "vdsina.838384.xyz"
 
 
 def get_me_in_local():
@@ -22,13 +21,15 @@ def get_me_in_local():
 
 me_in_local = get_me_in_local()
 print(f'Me in local: {me_in_local}')
+gateways = netifaces.gateways()
+default_gateway = gateways['default'][netifaces.AF_INET][0]
+print(f'Default gateway: {default_gateway}')
 ovpn_listener = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-vpn_port = 27005
+vpn_port = 51820
 ovpn_listener.bind(("", vpn_port))
 
 client_ovpn_address = (None, None)
 
-padding = b"\x00\x11\x22"
 id_ = random.randint(0, 2 ** 16 - 1)
 
 
@@ -95,11 +96,9 @@ incoming_icmp_listen_thread.start()
 
 
 def enableRouting():
-    gateways = netifaces.gateways()
-    default_gateway = gateways['default'][netifaces.AF_INET][0]
     print(f"Preserving route to {server_address} via {default_gateway}")
     if isWindows:
-        subprocess.check_output(f"route add {server_address} {default_gateway} metric 9999")
+        subprocess.check_output(f"route add {server_address} via {default_gateway}")
     else:
         try:
             subprocess.check_output(f"route add {server_address} {'gw' if platform.system() != 'Darwin' else ''} {default_gateway}", shell=True)
@@ -113,7 +112,7 @@ data = b"abcdefghijklmnopqrstuvwabcdefghi"
 print("Is ping google.com allowed?..", end=' ')
 icmp_send("google.com", data, id_, False)
 try:
-    incoming_icmp_listen_thread = incoming_packets.get(timeout=1)
+    _ = incoming_packets.get(timeout=1)
 except queue.Empty:
     print("Nope")
     os._exit(1)
@@ -124,8 +123,9 @@ for i in range(3):
     time.sleep(0.05)
 while True:
     try:
-        incoming_icmp_listen_thread = incoming_packets.get(timeout=1)
-        if incoming_icmp_listen_thread.startswith(b"ReplyReply"):
+        packet = incoming_packets.get(timeout=1)
+        print(packet)
+        if packet.startswith(b"ReplyReply"):
             break
     except queue.Empty:
         print("Nope")

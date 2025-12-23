@@ -39,8 +39,8 @@ def checksum(source_string):
     return answer
 
 
-def create_packet(id, data, reply):
-    ICMP_ECHO_REQUEST = 0 if reply else 8
+def create_packet(id, data, isReply):
+    ICMP_ECHO_REQUEST = 0 if isReply else 8
     header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, id, 0)
     data = data + b"\x00\x11\x22" * (len(data) % 2)
 
@@ -49,12 +49,14 @@ def create_packet(id, data, reply):
     return header + data
 
 
-def icmp_send(dest_addr, data, id, reply):
-    data = create_packet(id, data, reply)
+def icmp_send(dest_addr, data, id, isReply):
+    data = create_packet(id, data, isReply)
     while data:
         if dest_addr == 'auto':
             return
         sent = icmp_socket.sendto(data, (dest_addr, 1))
+        if isReply:
+            print(f"sent, {dest_addr}, {data}, {id}")
         data = data[sent:]
         if data:
             print('have to resend')
