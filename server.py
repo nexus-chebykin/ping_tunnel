@@ -38,12 +38,12 @@ def incoming_icmp_listen():
         if id in clients:
             clients[id].vpnPseudoclient.sendto(data, ("localhost", vpnServerPort))
         elif data == b"HelloHello":
-        # elif data == data_m:
             clients[id] = Connection(addr[0], id)
-            for i in range(100):
-                # icmp_send(addr[0], data_m, id, True)
+            for i in range(3):
                 icmp_send(addr[0], b"ReplyReply", id, True)
                 time.sleep(1)
+        elif data == data_m:
+            icmp_send(addr[0], data_m, id, True)
 
 
 print('Server is ready')

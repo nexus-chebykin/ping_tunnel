@@ -8,7 +8,7 @@ import netifaces
 from common import *
 
 
-server_address = "vdsina.838384.xyz"
+server_address = "ru.838384.xyz"
 
 
 def get_me_in_local():
@@ -88,7 +88,8 @@ def incoming_icmp_listen():
         if mode == "enqueue":
             incoming_packets.put(packet)
         elif mode == "redirect":
-            ovpn_listener.sendto(packet, client_ovpn_address)
+            if client_ovpn_address[0] is not None:
+                ovpn_listener.sendto(packet, client_ovpn_address)
 
 
 incoming_icmp_listen_thread = threading.Thread(target=incoming_icmp_listen)
